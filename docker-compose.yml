@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  fraudgraph-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fraudgraph-gnn-api
+    ports:
+      - "8000:8000"
+    environment:
+      - SIMULATION_MODE=true
+      - PORT=8000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  fraudgraph-benchmark:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fraudgraph-gnn-benchmark
+    command: ["python", "benchmarks/eval_gnn_vs_tabular.py"]
+    profiles:
+      - benchmark
+    depends_on:
+      - fraudgraph-api
